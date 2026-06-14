@@ -146,7 +146,7 @@ body{font-family:'DM Mono',monospace;background:#F4F6F9;color:#1A1A2E;font-size:
 // CONFIGURACIÓN — GOOGLE APPS SCRIPT WEBHOOK
 // Reemplazar con tu URL de Google Apps Script
 // ══════════════════════════════════════════════
-const WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbzK2ig8SSubBHvaF-S04_IQEXi2T4x-cFnUak8bojLb6bAF9UI9D1hJqH-IkdjvNEYZzg/exec';
+const WEBHOOK_URL = 'REEMPLAZAR_CON_TU_URL_DE_APPS_SCRIPT';
 
 // ══════════════════════════════════════════════
 // STEPS
@@ -192,6 +192,9 @@ const STEPS = [
         {v:'50-100k',l:'USD 50.000 – 100.000'},
         {v:'>100k',  l:'Más de USD 100.000'},
       ]},
+      {id:'capital_exacto', type:'number', label:'Monto exacto a invertir inicialmente (USD)',
+        placeholder:'Ej: 8500',
+        hint:'Este monto se usa para calcular los importes exactos de cada posición en tu cartera. Es confidencial y solo lo ve tu asesor.'},
     ]
   },
   {
@@ -347,9 +350,9 @@ function renderStep() {
         </select>
       </div>`;
     } else {
-      const fg = (q.id === 'nombre' || q.id === 'apellido') ? '' : '';
       html += `<div class="field">
         <label>${q.label}</label>
+        ${q.hint ? `<div class="q-hint">ℹ️ ${q.hint}</div>` : ''}
         <input type="${q.type}" id="q-${q.id}" placeholder="${q.placeholder || ''}"
           value="${ans[q.id] || ''}" oninput="ans['${q.id}']=this.value;checkNav()">
       </div>`;
@@ -380,7 +383,9 @@ function checkNav() {
   const s = STEPS[step];
   const btn = document.getElementById('btn-next');
   if (!btn) return;
+  const OPTIONAL = ['capital_exacto'];
   const ok = s.questions.every(q => {
+    if (OPTIONAL.includes(q.id)) return true;
     const v = ans[q.id];
     return v !== undefined && v !== '' && v !== null;
   });
@@ -447,6 +452,7 @@ function renderResult() {
       <div class="datos-row"><span class="datos-lbl">Edad</span><span class="datos-val">${ans.edad} años</span></div>
       <div class="datos-row"><span class="datos-lbl">Objetivo</span><span class="datos-val">${OBJ_MAP[ans.objetivo_prim] || '—'}</span></div>
       <div class="datos-row"><span class="datos-lbl">Capital disponible</span><span class="datos-val">${CAPITAL_MAP[ans.capital] || '—'}</span></div>
+      ${ans.capital_exacto ? `<div class="datos-row"><span class="datos-lbl">Monto exacto a invertir</span><span class="datos-val">USD ${parseFloat(ans.capital_exacto).toLocaleString('en-US')}</span></div>` : ''}
       <div class="datos-row"><span class="datos-lbl">Régimen tributario</span><span class="datos-val">${REGIMEN_MAP[ans.regimen] || '—'}</span></div>
       <div class="datos-row"><span class="datos-lbl">Tolerancia pérdida</span><span class="datos-val">Hasta ${ans.perdida_max === 'mas' ? '>25%' : ans.perdida_max + '%'}</span></div>
     </div>
@@ -498,6 +504,7 @@ function enviarResultado(pk, rf, etfs, acc) {
     edad: ans.edad || '',
     regimen: REGIMEN_MAP[ans.regimen] || ans.regimen || '',
     capital: CAPITAL_MAP[ans.capital] || ans.capital || '',
+    capital_exacto: ans.capital_exacto || '',
     perfil: PROFILES[pk].name,
     objetivo: OBJ_MAP[ans.objetivo_prim] || '',
     horizonte: HOR_MAP[ans.horizonte] || '',
