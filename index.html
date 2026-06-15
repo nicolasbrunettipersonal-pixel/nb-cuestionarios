@@ -522,11 +522,12 @@ function enviarResultado(pk, rf, etfs, acc) {
     benchmark: PROFILES[pk].bench,
   };
 
+  var formData = new FormData();
+  formData.append('payload', JSON.stringify(payload));
   fetch(WEBHOOK_URL, {
     method: 'POST',
     mode: 'no-cors',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
+    body: formData
   })
   .then(() => {
     btn.innerHTML = '<span>✓</span> ¡Enviado correctamente!';
